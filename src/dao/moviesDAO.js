@@ -303,6 +303,26 @@ export default class MoviesDAO {
           $match: {
             _id: ObjectId(id)
           }
+        }, {
+          $lookup: {
+            from: 'comments', 
+            let: {id: '$_id'}, 
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ['$movie_id', '$$id'],
+                  },
+                },
+              },
+              {
+              $sort : {
+                'date':-1
+              },
+            },
+            ], 
+            as: 'comments'
+          }
         }
       ]
       return await movies.aggregate(pipeline).next()
@@ -313,6 +333,7 @@ export default class MoviesDAO {
       Handle the error that occurs when an invalid ID is passed to this method.
       When this specific error is thrown, the method should return `null`.
       */
+      if (e.toString().startsWith("Error: Argument passed in must be a single String of 12 bytes or a string of 24 hex characters")) return null
 
       // TODO Ticket: Error Handling
       // Catch the InvalidId error by string matching, and then handle it.
